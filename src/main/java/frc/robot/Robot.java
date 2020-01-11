@@ -23,6 +23,8 @@ public class Robot extends TimedRobot{
         drivebase = new Drivebase();
 
         auton = new AutonClass();
+
+        drivebase.resetEncoders();
     }
 
     @Override
@@ -32,6 +34,7 @@ public class Robot extends TimedRobot{
     @Override
     public void autonomousInit() {
         auton.reset();
+        drivebase.resetEncoders();
     }
 
     @Override

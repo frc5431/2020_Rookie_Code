@@ -11,6 +11,7 @@ public class AutonClass {
     private AHRS navx;
     private int times; 
     private int previousSection;
+    private double distance;
 
     public AutonClass() {
         navx = new AHRS(SPI.Port.kMXP);
@@ -23,6 +24,7 @@ public class AutonClass {
         setStartTime();
         navx.reset();
         navx.resetDisplacement();
+        distance = 0;
     }
 
     public void resetNavx() {
@@ -40,9 +42,20 @@ public class AutonClass {
         startTime = getSystemTime();
     }
 
+    public void setDistance(final Robot robot) {
+        distance = robot.getDrivebase().getEncoderDistance();
+    }
 
     public void runAuton(final Robot robot) {
         final Drivebase db = robot.getDrivebase();
+
+        if (db.getEncoderDistance() < distance + 36) {
+            db.drive(0.225, 0.225);
+        } else {
+            db.drive(0, 0);
+        }
+        System.out.println(db.getEncoderDistance());
+        /*
         switch (section) {
             case 0:
                 db.drive(0.4, 0.4);
@@ -152,5 +165,6 @@ public class AutonClass {
                 break;
         }
         System.out.println(section);
+        */
     }
 }

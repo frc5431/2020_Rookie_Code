@@ -22,4 +22,7 @@ public final class Constants {
     public final static int RIGHT_BACK_ID = 6;
     public final static boolean RIGHT_BACK_INVERTED = false;
 
+    public final static double WHEEL_CIRCUMFERENCE = 6 * Math.PI;
+    public final static double COUNTS_PER_REVOLUTION = 4096;
+    public final static double GEAR_RATIO = 3;
 }
