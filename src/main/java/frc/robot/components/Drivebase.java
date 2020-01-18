@@ -3,10 +3,22 @@ package frc.robot.components;
 import frc.robot.Constants;
 
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
+
+import java.util.List;
+
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
+import com.ctre.phoenix.motorcontrol.NeutralMode;
+
+import edu.wpi.first.wpilibj.controller.PIDController;
+import edu.wpi.first.wpilibj.controller.SimpleMotorFeedforward;
+import edu.wpi.first.wpilibj2.command.PIDSubsystem; 
 
 public class Drivebase {
     private final WPI_TalonSRX leftFront, leftMiddle, leftBack, rightFront, rightMiddle, rightBack;
+    private List<WPI_TalonSRX> motors = List.of();
+    
+    // 0.004, 0.00005, 0 - 12 ft
+    private PIDController pid = new PIDController(0.004, 0.00000, 0.000);
 
     public Drivebase(){
         leftFront = new WPI_TalonSRX(Constants.LEFT_FRONT_ID);
@@ -38,15 +50,19 @@ public class Drivebase {
         rightBack.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute);
         // rightBack.configPulseWidthPeriod_EdgesPerRot(256, 0);
         rightBack.setInverted(Constants.RIGHT_BACK_INVERTED);
+
+        motors = List.of(leftFront, leftMiddle, leftBack, rightFront, rightMiddle, rightBack);
+        // setSetpoint(4000);
+
+        motors.forEach((m) -> m.setNeutralMode(NeutralMode.Brake));
+    }
+
+    public PIDController getPIDController() {
+        return pid;
     }
 
     public void resetEncoders() {
-        leftFront.setSelectedSensorPosition(0);
-        leftMiddle.setSelectedSensorPosition(0);
-        leftBack.setSelectedSensorPosition(0);
-        rightFront.setSelectedSensorPosition(0);
-        rightMiddle.setSelectedSensorPosition(0);
-        rightBack.setSelectedSensorPosition(0);
+        motors.forEach((m) -> m.setSelectedSensorPosition(0));
     }
 
     public int getEncoderLeft() {
@@ -57,8 +73,16 @@ public class Drivebase {
         return (rightFront.getSelectedSensorPosition() + rightMiddle.getSelectedSensorPosition() + rightBack.getSelectedSensorPosition())/3;
     }
 
+    public double getEncoderDistanceLeft() {
+        return (getEncoderLeft()) / Constants.COUNTS_PER_REVOLUTION * Constants.WHEEL_CIRCUMFERENCE * Constants.GEAR_RATIO;
+    }
+
+    public double getEncoderDistanceRight() {
+        return (getEncoderRight()) / Constants.COUNTS_PER_REVOLUTION * Constants.WHEEL_CIRCUMFERENCE * Constants.GEAR_RATIO;
+    }
+
     public double getEncoderDistance() {
-        return (getEncoderLeft() + getEncoderRight()) / 2 / Constants.COUNTS_PER_REVOLUTION * Constants.WHEEL_CIRCUMFERENCE * Constants.GEAR_RATIO;
+        return (getEncoderDistanceLeft() + getEncoderDistanceRight()) / 2;
     }
 
     public void driveLeft(final double val){

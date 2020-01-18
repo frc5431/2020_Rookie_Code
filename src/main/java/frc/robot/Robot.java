@@ -5,7 +5,7 @@ import frc.robot.components.*;
 
 public class Robot extends TimedRobot{
     public static enum Mode{
-        DISABLED, TELEOP
+        DISABLED, TELEOP, AUTONOMOUS
     }
 
     private Mode mode = Mode.DISABLED;
@@ -33,13 +33,14 @@ public class Robot extends TimedRobot{
 
     @Override
     public void autonomousInit() {
+        mode = Mode.AUTONOMOUS;
         auton.reset();
         drivebase.resetEncoders();
     }
 
     @Override
     public void autonomousPeriodic() {
-        auton.runAuton(this);
+        auton.periodic(this);
     }
 
     @Override
