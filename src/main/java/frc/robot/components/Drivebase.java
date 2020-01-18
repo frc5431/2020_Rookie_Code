@@ -10,15 +10,14 @@ import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 
 import edu.wpi.first.wpilibj.controller.PIDController;
-import edu.wpi.first.wpilibj.controller.SimpleMotorFeedforward;
-import edu.wpi.first.wpilibj2.command.PIDSubsystem; 
 
 public class Drivebase {
     private final WPI_TalonSRX leftFront, leftMiddle, leftBack, rightFront, rightMiddle, rightBack;
     private List<WPI_TalonSRX> motors = List.of();
-    
+
     // 0.004, 0.00005, 0 - 12 ft
-    private PIDController pid = new PIDController(0.004, 0.00000, 0.000);
+    private PIDController drivePID = new PIDController(Constants.DRIVE_PID_P, Constants.DRIVE_PID_I, Constants.DRIVE_PID_D);
+    private PIDController anglePID = new PIDController(Constants.ANGLE_PID_P, Constants.ANGLE_PID_I, Constants.ANGLE_PID_D);
 
     public Drivebase(){
         leftFront = new WPI_TalonSRX(Constants.LEFT_FRONT_ID);
@@ -58,7 +57,11 @@ public class Drivebase {
     }
 
     public PIDController getPIDController() {
-        return pid;
+        return drivePID;
+    }
+
+    public PIDController getAnglePIDController(){
+        return anglePID;
     }
 
     public void resetEncoders() {

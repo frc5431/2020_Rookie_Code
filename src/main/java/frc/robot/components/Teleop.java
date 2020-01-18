@@ -15,11 +15,11 @@ public class Teleop{
 
     public void periodic(final Robot robot){
         //Tank Drive
-        robot.getDrivebase().drive(-driver.getRawAxis(Titan.Xbox.Axis.LEFT_Y)*.75, -driver.getRawAxis(Titan.Xbox.Axis.RIGHT_Y)*.75);
+        robot.getDrivebase().drive(-driver.getRawAxis(Titan.Xbox.Axis.LEFT_Y)*.5, -driver.getRawAxis(Titan.Xbox.Axis.RIGHT_Y)*.5);
         
         //Arcade Drive
         //robot.getDrivebase().drive(-driver.getRawAxis(Titan.Xbox.Axis.LEFT_X)*.4 + driver.getRawAxis(Titan.Xbox.Axis.LEFT_Y), driver.getRawAxis(Titan.Xbox.Axis.LEFT_X)*.4+ driver.getRawAxis(Titan.Xbox.Axis.LEFT_Y));
-        System.out.println((robot.getDrivebase().getEncoderLeft() + robot.getDrivebase().getEncoderRight())/2);
+        // System.out.println(robot.getDrivebase().getEncoderDistance());
     }
 
     public Titan.Xbox getDriver(){
