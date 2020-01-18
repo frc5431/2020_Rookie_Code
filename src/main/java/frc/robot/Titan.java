@@ -56,18 +56,18 @@ public final class Titan {
 		private double deadzoneMin = 0.0f, deadzoneMax = 0.0f;
 		
 		public interface AxisZone{
-        }
-        
-        public interface ButtonZone {
-        }
+		}
+		
+		public interface ButtonZone {
+		}
 
-        public double getRawAxis(final AxisZone value) {
-            return getRawAxis(((Enum<?>) value).ordinal());
-        }
+		public double getRawAxis(final AxisZone value) {
+			return getRawAxis(((Enum<?>) value).ordinal());
+		}
 
-        public boolean getRawButton(final ButtonZone value) {
-            return getRawButton(((Enum<?>) value).ordinal() + 1);
-        }
+		public boolean getRawButton(final ButtonZone value) {
+			return getRawButton(((Enum<?>) value).ordinal() + 1);
+		}
 
 		public Joystick(final int port) {
 			super(port);
@@ -110,15 +110,15 @@ public final class Titan {
 	}
 
 	public static class FSi6S extends Titan.Joystick {
-        public enum SwitchPosition implements ButtonZone {
+		public enum SwitchPosition implements ButtonZone {
 			DOWN, NEUTRAL, UP
 		}
 
-        public enum Switch implements ButtonZone {
+		public enum Switch implements ButtonZone {
 			A, B, C, D
 		}
 
-        public enum Axis implements AxisZone {
+		public enum Axis implements AxisZone {
 			RIGHT_X, RIGHT_Y, LEFT_Y, LEFT_X
 		}
 
@@ -166,19 +166,19 @@ public final class Titan {
 	}
 
 	public static class Xbox extends Titan.Joystick {
-        public Xbox(int port) {
-            super(port);
-        }
+		public Xbox(int port) {
+			super(port);
+		}
 
-        public enum Button implements ButtonZone {
-            // ordered correctly, so ordinal reflects real mapping
-            A, B, X, Y, BUMPER_L, BUMPER_R, BACK, START
-        }
+		public enum Button implements ButtonZone {
+			// ordered correctly, so ordinal reflects real mapping
+			A, B, X, Y, BUMPER_L, BUMPER_R, BACK, START
+		}
 
-        public enum Axis implements AxisZone {
-            LEFT_X, LEFT_Y, TRIGGER_LEFT, TRIGGER_RIGHT, RIGHT_X, RIGHT_Y
-        }
-    }
+		public enum Axis implements AxisZone {
+			LEFT_X, LEFT_Y, TRIGGER_LEFT, TRIGGER_RIGHT, RIGHT_X, RIGHT_Y
+		}
+	}
 	
 	public static class LogitechExtreme3D extends Titan.Joystick {
 		public static enum Button implements ButtonZone{
@@ -199,21 +199,21 @@ public final class Titan {
 		private final CommandQueue<T> currentQueue = new CommandQueue<>();
 
 		public void update(final T robot) {
-            //Update all of the button commands
-            for (final Integer button : assignments.keySet()) {
-                getRawButton(button, true); //Call the queue update on the specified button
-            }
+			//Update all of the button commands
+			for (final Integer button : assignments.keySet()) {
+				getRawButton(button, true); //Call the queue update on the specified button
+			}
 
 			currentQueue.update(robot);
 		}
 
-        public AssignableJoystick(final int port) {
-            super(port);
-        }
+		public AssignableJoystick(final int port) {
+			super(port);
+		}
 
-        public boolean getRawButton(final int but, boolean update) {
+		public boolean getRawButton(final int but, boolean update) {
 			final boolean value = super.getRawButton(but);
-            if (assignments.containsKey(but) && value && update) {
+			if (assignments.containsKey(but) && value && update) {
 				currentQueue.clear();
 
 				//call the associated function from the index in the map and then add it to the queue
@@ -227,8 +227,8 @@ public final class Titan {
 			assignments.put(button, generator);
 		}
 
-        public void assign(final ButtonZone button, final Supplier<CommandQueue<T>> generator) {
-            assign(((Enum<?>) button).ordinal(), generator);
+		public void assign(final ButtonZone button, final Supplier<CommandQueue<T>> generator) {
+			assign(((Enum<?>) button).ordinal(), generator);
 		}
 	}
 
@@ -350,11 +350,11 @@ public final class Titan {
 		public String properties = "None";
 		public long startTime = 0;
 
-        public abstract void init(final T robot);
+		public abstract void init(final T robot);
 
-        public enum CommandResult {
+		public enum CommandResult {
 			IN_PROGRESS, COMPLETE, CLEAR_QUEUE, RESTART_COMMAND
-        }
+		}
 
 		public abstract CommandResult update(final T robot);
 
