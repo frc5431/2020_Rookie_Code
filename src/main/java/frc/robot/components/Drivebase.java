@@ -1,107 +1,199 @@
 package frc.robot.components;
 
-import frc.robot.Constants;
-
-import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
-
-import java.util.List;
-
+import com.ctre.phoenix.ErrorCode;
+import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.DemandType;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
-import com.ctre.phoenix.motorcontrol.NeutralMode;
+import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
+import com.kauailabs.navx.frc.AHRS;
+import edu.wpi.first.wpilibj.SPI;
 
-import edu.wpi.first.wpilibj.controller.PIDController;
+import frc.robot.Constants;
+import frc.robot.Robot;
+import frc.robot.util.MotionMagic;
+import frc.team5431.titan.core.misc.Toggle;
+import frc.team5431.titan.core.robot.Component;
 
-public class Drivebase {
-	private final WPI_TalonSRX leftFront, leftMiddle, leftBack, rightFront, rightMiddle, rightBack;
-	private List<WPI_TalonSRX> motors = List.of();
+public class Drivebase extends Component<Robot> {
 
-	// 0.004, 0.00005, 0 - 12 ft
-	private PIDController drivePID = new PIDController(Constants.DRIVE_PID_P, Constants.DRIVE_PID_I, Constants.DRIVE_PID_D);
-	private PIDController anglePID = new PIDController(Constants.ANGLE_PID_P, Constants.ANGLE_PID_I, Constants.ANGLE_PID_D);
+	private AHRS navx;
 
-	public Drivebase(){
-		leftFront = new WPI_TalonSRX(Constants.LEFT_FRONT_ID);
-		leftFront.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute);
-		// leftFront.configPulseWidthPeriod_EdgesPerRot(256, 0);
-		leftFront.setInverted(Constants.LEFT_FRONT_INVERTED);
+    private WPI_TalonSRX left;
+    private WPI_TalonSRX right;
 
-		leftMiddle = new WPI_TalonSRX(Constants.LEFT_MIDDLE_ID);
-		leftMiddle.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute);
-		// leftMiddle.configPulseWidthPeriod_EdgesPerRot(256, 0);
-		leftMiddle.setInverted(Constants.LEFT_MIDDLE_INVERTED);
+	private WPI_TalonSRX _leftMiddle;
+	private WPI_TalonSRX _rightMiddle;
 
-		leftBack = new WPI_TalonSRX(Constants.LEFT_BACK_ID);
-		leftBack.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute);
-		// leftBack.configPulseWidthPeriod_EdgesPerRot(256, 0);
-		leftBack.setInverted(Constants.LEFT_BACK_INVERTED);
+    private WPI_TalonSRX _leftFollow;
+    private WPI_TalonSRX _rightFollow;
+
+    private Toggle swappedDrive;
+
+    public Drivebase() {
+
+		navx = new AHRS(SPI.Port.kMXP);
+
+        left = new WPI_TalonSRX(Constants.DRIVEBASE_FRONT_LEFT_ID);
+        right = new WPI_TalonSRX(Constants.DRIVEBASE_FRONT_RIGHT_ID);
+
+		_leftMiddle = new WPI_TalonSRX(Constants.DRIVEBASE_MIDDLE_LEFT_ID);
+		_rightMiddle = new WPI_TalonSRX(Constants.DRIVEBASE_MIDDLE_RIGHT_ID);
+
+        _leftFollow = new WPI_TalonSRX(Constants.DRIVEBASE_BACK_LEFT_ID);
+        _rightFollow = new WPI_TalonSRX(Constants.DRIVEBASE_BACK_RIGHT_ID);
+
+        left.setInverted(Constants.DRIVEBASE_LEFT_REVERSE);
+		right.setInverted(Constants.DRIVEBASE_RIGHT_REVERSE);
+		_leftMiddle.setInverted(Constants.DRIVEBASE_LEFT_REVERSE);
+		_rightMiddle.setInverted(Constants.DRIVEBASE_RIGHT_REVERSE);
+        _leftFollow.setInverted(Constants.DRIVEBASE_LEFT_REVERSE);
+        _rightFollow.setInverted(Constants.DRIVEBASE_RIGHT_REVERSE);
+
+		_leftMiddle.follow(left);
+		_rightMiddle.follow(right);
+        _leftFollow.follow(left);
+        _rightFollow.follow(right);
+
+        /* Factory Default all hardware to prevent unexpected behavior */
+        left.configFactoryDefault();
+		right.configFactoryDefault();
 		
-		rightFront = new WPI_TalonSRX(Constants.RIGHT_FRONT_ID);
-		rightFront.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute);
-		// rightFront.configPulseWidthPeriod_EdgesPerRot(256, 0);
-		rightFront.setInverted(Constants.RIGHT_FRONT_INVERTED);
 
-		rightMiddle = new WPI_TalonSRX(Constants.RIGHT_MIDDLE_ID);
-		rightMiddle.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute);
-		//rightMiddle.configPulseWidthPeriod_EdgesPerRot(256, 0);
-		rightMiddle.setInverted(Constants.RIGHT_MIDDLE_INVERTED);
+        /* Set what state the motors will be at when the speed is at zero */
+        left.setNeutralMode(Constants.DRIVEBASE_NEUTRAL_MODE);
+        right.setNeutralMode(Constants.DRIVEBASE_NEUTRAL_MODE);
 
-		rightBack = new WPI_TalonSRX(Constants.RIGHT_BACK_ID);
-		rightBack.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Absolute);
-		// rightBack.configPulseWidthPeriod_EdgesPerRot(256, 0);
-		rightBack.setInverted(Constants.RIGHT_BACK_INVERTED);
+        /* Set the motor output ranges */
+        left.configPeakOutputForward(1, Constants.DRIVEBASE_TIMEOUT_MS);
+        left.configPeakOutputReverse(-1, Constants.DRIVEBASE_TIMEOUT_MS);
+        right.configPeakOutputForward(1, Constants.DRIVEBASE_TIMEOUT_MS);
+        right.configPeakOutputReverse(-1, Constants.DRIVEBASE_TIMEOUT_MS);
 
-		motors = List.of(leftFront, leftMiddle, leftBack, rightFront, rightMiddle, rightBack);
-		// setSetpoint(4000);
+        /* Tell motors which sensors it is reading from */
+        left.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder, 0, Constants.DRIVEBASE_TIMEOUT_MS);
+        right.configSelectedFeedbackSensor(FeedbackDevice.SensorSum, 0, Constants.DRIVEBASE_TIMEOUT_MS);
 
-		motors.forEach((m) -> m.setNeutralMode(NeutralMode.Brake));
+        right.configSelectedFeedbackCoefficient(0.5, 0, Constants.DRIVEBASE_TIMEOUT_MS);
+
+        /* Set PID values for each slot */
+        setPID(Constants.DRIVEBASE_MOTIONMAGIC_SLOT, Constants.DRIVEBASE_MOTIONMAGIC_GAINS);
+        // setPID(Constants.DRIVEBASE_MOTIONMAGIC_TURN_SLOT, Constants.DRIVEBASE_MOTIONMAGIC_TURN_GAINS);
+
+        zeroGyro();
+        zeroDistance();
+
+        swappedDrive = new Toggle();
+        swappedDrive.setState(false);
 	}
 
-	public PIDController getPIDController() {
-		return drivePID;
-	}
+    private void setPID(final int slot, final MotionMagic gain) {
+        ErrorCode eCode = ErrorCode.OK;
 
-	public PIDController getAnglePIDController(){
-		return anglePID;
-	}
+        eCode = right.config_kP(slot, gain.kP);
+        assert (eCode == ErrorCode.OK);
 
-	public void resetEncoders() {
-		motors.forEach((m) -> m.setSelectedSensorPosition(0));
-	}
+        eCode = right.config_kI(slot, gain.kI);
+        assert (eCode == ErrorCode.OK);
 
-	public int getEncoderLeft() {
-		return (leftFront.getSelectedSensorPosition() + leftMiddle.getSelectedSensorPosition() + leftBack.getSelectedSensorPosition())/3;
-	}
+        eCode = right.config_kD(slot, gain.kD);
+        assert (eCode == ErrorCode.OK);
 
-	public int getEncoderRight() {
-		return (rightFront.getSelectedSensorPosition() + rightMiddle.getSelectedSensorPosition() + rightBack.getSelectedSensorPosition())/3;
-	}
+        eCode = right.config_kF(slot, gain.kF);
+        assert (eCode == ErrorCode.OK);
 
-	public double getEncoderDistanceLeft() {
-		return (getEncoderLeft()) / Constants.COUNTS_PER_REVOLUTION * Constants.WHEEL_CIRCUMFERENCE * Constants.GEAR_RATIO;
-	}
+        eCode = right.config_IntegralZone(slot, gain.kIntegralZone, Constants.DRIVEBASE_TIMEOUT_MS);
+        assert (eCode == ErrorCode.OK);
 
-	public double getEncoderDistanceRight() {
-		return (getEncoderRight()) / Constants.COUNTS_PER_REVOLUTION * Constants.WHEEL_CIRCUMFERENCE * Constants.GEAR_RATIO;
-	}
+        eCode = right.configClosedLoopPeakOutput(slot, gain.kPeakOutput, Constants.DRIVEBASE_TIMEOUT_MS);
+        assert (eCode == ErrorCode.OK);
 
-	public double getEncoderDistance() {
-		return (getEncoderDistanceLeft() + getEncoderDistanceRight()) / 2;
-	}
+        eCode = right.configClosedLoopPeriod(slot, gain.kClosedLoopTime, Constants.DRIVEBASE_TIMEOUT_MS);
+        assert (eCode == ErrorCode.OK);
+    }
 
-	public void driveLeft(final double val){
-		leftFront.set(val);
-		leftMiddle.set(val);
-		leftBack.set(val);
-	}
+    private void zeroDistance() {
+        ErrorCode eCode = ErrorCode.OK;
+        eCode = left.getSensorCollection().setQuadraturePosition(0, Constants.DRIVEBASE_TIMEOUT_MS);
+        assert (eCode == ErrorCode.OK);
 
-	public void driveRight(final double val){
-		rightFront.set(val);
-		rightMiddle.set(val);
-		rightBack.set(val);
-	}
+        eCode = right.getSensorCollection().setQuadraturePosition(0, Constants.DRIVEBASE_TIMEOUT_MS);
+        assert (eCode == ErrorCode.OK);
+    }
 
-	public void drive(final double left, final double right){
-		driveLeft(left);
-		driveRight(right);
-	}
+    public void zeroGyro() {
+        zeroDistance();
+
+        navx.zeroYaw();
+    }
+
+    @Override
+    public void init(Robot robot) {
+    }
+
+    @Override
+    public void periodic(Robot robot) {
+        // Check if the the motors are working together
+        assert (left.get() == _leftFollow.get());
+        assert (right.get() == _rightFollow.get());
+    }
+
+    @Override
+    public void disabled(Robot robot) {
+    }
+
+    public void setSlot(int slot) {
+        // Add asserts as the motorcontrollers only support 4 slots
+        assert (slot >= 0);
+        assert (slot <= 3);
+
+        right.selectProfileSlot(slot, 0);
+    }
+
+    public void drivePercentageTank(double driveLeft, double driveRight) {
+        left.set(ControlMode.PercentOutput, driveLeft);
+        right.set(ControlMode.PercentOutput, driveRight);
+    }
+
+    public void drivePercentageArcade(double power, double turn) {
+        /*
+         * Arbitrary based turning. Theoretically better as it is controlled by the
+         * speed controller.
+         */
+
+        left.set(ControlMode.PercentOutput, power, DemandType.ArbitraryFeedForward, -turn);
+        right.set(ControlMode.PercentOutput, power, DemandType.ArbitraryFeedForward, +turn);
+    }
+
+    // public void driveMotionMagic(MotionMagicCommands command, double target, double optionalSensor) {
+    public void driveMotionMagic(double distance, double angle) {
+        // case FOWARD:
+        // changeRemoteSensor(command);
+        // setSlot(Constants.DRIVEBASE_MOTIONMAGIC_DRIVE_SLOT);
+
+        // left.follow(right);
+        // right.set(ControlMode.MotionMagic, target);
+        // break;
+        // case TURN:
+        // changeRemoteSensor(command);
+        // double targetSensor = optionalSensor * 4096 * 6;
+        // double targetTurn = target * 4096 * 6;
+
+        // setSlot(Constants.DRIVEBASE_MOTIONMAGIC_TURN_SLOT);
+        // right.set(ControlMode.MotionMagic, targetSensor, DemandType.AuxPID,
+        // targetTurn);
+        // left.follow(right);
+        // break;
+        // default:
+        // right.set(0);
+        // left.set(0);
+        // break;
+        // }
+
+        left.follow(right);
+        right.set(ControlMode.MotionMagic, distance, DemandType.AuxPID, angle);
+    }
+
+    public double getHeading() {
+        return navx.getYaw();
+    }
 }

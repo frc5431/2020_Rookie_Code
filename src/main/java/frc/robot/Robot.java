@@ -1,76 +1,135 @@
 package frc.robot;
 
-import edu.wpi.first.wpilibj.TimedRobot;
+import java.util.List;
+
 import frc.robot.components.*;
+import frc.team5431.titan.core.misc.Logger;
+import frc.team5431.titan.core.robot.Component;
+import frc.team5431.titan.core.robot.TitanRobot;
 
-public class Robot extends TimedRobot{
-	public static enum Mode{
-		DISABLED, TELEOP, AUTONOMOUS
+public class Robot extends TitanRobot<Robot> {
+	public static enum Mode {
+		DISABLED, AUTO, TELEOP, TEST
 	}
 
-	private Mode mode = Mode.DISABLED;
-
+	// Component Objects
+	private Dashboard dashboard;
 	private Drivebase drivebase;
-
 	private Teleop teleop;
+	private Autonomous auton;
 
-	private AutonClass auton;
+	// Objects for mostly internal Robot.java usage
+	private Mode mode = Mode.DISABLED;
+	private List<Component<Robot>> components = List.of();
+
+	// The Following is Initializer Functions
 
 	@Override
-	public void robotInit(){
-		teleop = new Teleop();
+	public void robotInit() {
+		Logger.DEBUG = true;
 
+		// Initialize Components
+		// colorWheel = new ControlPanel();
+		dashboard = new Dashboard();
 		drivebase = new Drivebase();
+		teleop = new Teleop();
+		auton = new Autonomous();
 
-		auton = new AutonClass();
-
-		drivebase.resetEncoders();
+		// Add Components to components Array
+		components = List.of(/* colorWheel, */ dashboard, drivebase, teleop);
 	}
 
 	@Override
-	public void robotPeriodic(){
+	public void teleopInit() {
+		mode = Mode.TELEOP;
+		components.forEach((com) -> com.init(this));
 	}
 
 	@Override
 	public void autonomousInit() {
-		mode = Mode.AUTONOMOUS;
-		auton.reset();
-		drivebase.resetEncoders();
+		mode = Mode.AUTO;
+		components.forEach((com) -> com.init(this));
+	}
+
+	@Override
+	public void testInit() {
+		mode = Mode.TEST;
+		components.forEach((com) -> com.init(this));
+	}
+
+	@Override
+	public void disabledInit() {
+		mode = Mode.DISABLED;
+		components.forEach((com) -> com.disabled(this));
+	}
+
+	// The Following is Periodic Functions
+
+	@Override
+	public void robotPeriodic() {
+		components.forEach((com) -> com.tick(this));
+	}
+
+	@Override
+	public void teleopPeriodic() {
+		components.forEach((com) -> com.periodic(this));
 	}
 
 	@Override
 	public void autonomousPeriodic() {
-		auton.periodic(this);
+		teleopPeriodic();
 	}
 
 	@Override
-	public void teleopInit(){
-		mode = Mode.TELEOP;
+	public void testPeriodic() {
+		teleopPeriodic();
 	}
 
 	@Override
-	public void teleopPeriodic(){
-		teleop.periodic(this);
+	public void disabledPeriodic() {
+		// This Function Should Do Nothing
 	}
 
+	/**
+	 * @return the components
+	 */
 	@Override
-	public void disabledInit(){
-		mode = Mode.DISABLED;
+	public List<Component<Robot>> getComponents() {
+		return components;
 	}
 
-	public Mode getMode(){
+	/**
+	 * @return the mode
+	 */
+	public Mode getMode() {
 		return mode;
 	}
 
-	public Teleop getTeleop(){
-		return teleop;
-	}
-	
-	public Drivebase getDrivebase(){
+	/**
+	 * @return the drivebase
+	 */
+	public Drivebase getDrivebase() {
 		return drivebase;
 	}
 
-	public AutonClass getAuton(){
+	/**
+	 * @return the dashboard
+	 */
+	public Dashboard getDashboard() {
+		return dashboard;
+	}
+
+	/**
+	 * @return the teleop
+	 */
+	public Teleop getTeleop() {
+		return teleop;
+	}
+
+	/**
+	 * @return the autonomous
+	 */
+	public Autonomous getAutonomous() {
 		return auton;
 	}
 }
